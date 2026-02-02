@@ -11,98 +11,83 @@ import java.util.List;
 import com.edutech.progressive.config.DatabaseConnectionManager;
 import com.edutech.progressive.entity.Supplier;
 
-public class SupplierDAOImpl implements SupplierDAO {
-    private Connection connection;
-    
+public class SupplierDAOImpl implements SupplierDAO{
 
-    public SupplierDAOImpl() {
-        this.connection = DatabaseConnectionManager.getConnection();
-    }
+    public class SupplierDAOImpl implements SupplierDAO {
 
-    @Override
+    public SupplierDAOImpl() {}
+
     public int addSupplier(Supplier supplier) throws SQLException {
-        String sql = "INSERT INTO supplier(supplier_name,email,username,password,phone,address,role) Values(?,?,?,?,?,?,?)";
-        PreparedStatement ps = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+        Connection con = DatabaseConnectionManager.getConnection();
+        PreparedStatement ps = con.prepareStatement(
+                "INSERT INTO supplier (supplier_name, email, username, password) VALUES (?,?,?,?)",
+                Statement.RETURN_GENERATED_KEYS);
+
         ps.setString(1, supplier.getSupplierName());
         ps.setString(2, supplier.getEmail());
         ps.setString(3, supplier.getUsername());
         ps.setString(4, supplier.getPassword());
-        ps.setString(5, supplier.getPhone());
-        ps.setString(6, supplier.getAddress());
-        ps.setString(7, supplier.getRole());
+        ps.executeUpdate();
+
         ResultSet rs = ps.getGeneratedKeys();
-        if(rs.next()){
-            return rs.getInt(1);
+        if (rs.next()) {
+            supplier.setSupplierId(rs.getInt(1));
+            return supplier.getSupplierId();
         }
         return -1;
-
     }
 
-    @Override
     public Supplier getSupplierById(int supplierId) throws SQLException {
-        String sql = "SELECT * FROM supplier WHERE supplier_id=?";
-        Supplier supplier = null;
-        PreparedStatement ps = connection.prepareStatement(sql);
+        Connection con = DatabaseConnectionManager.getConnection();
+        PreparedStatement ps = con.prepareStatement("SELECT * FROM supplier WHERE supplier_id=?");
         ps.setInt(1, supplierId);
         ResultSet rs = ps.executeQuery();
-        if(rs.next()){
-            int id = rs.getInt("supplier_id");
-            String supplier_name = rs.getString("supplier_name");
-            String email = rs.getString("email");
-            String username = rs.getString("username");
-            String password = rs.getString("password");
-            String phone = rs.getString("phone");
-            String address = rs.getString("address");
-            String role = rs.getString("role");
-            return supplier = new Supplier(supplierId, supplier_name, email, phone, address, username, password, role);
+
+        if (rs.next()) {
+            Supplier s = new Supplier();
+            s.setSupplierId(rs.getInt("supplier_id"));
+            s.setSupplierName(rs.getString("supplier_name"));
+            s.setEmail(rs.getString("email"));
+            s.setUsername(rs.getString("username"));
+            s.setPassword(rs.getString("password"));
+            return s;
         }
         return null;
-
     }
 
-    @Override
     public void updateSupplier(Supplier supplier) throws SQLException {
-        String sql = "UPDATE supplier SET supplier_name=?,email=?,username=?,password=?,phone=?,address=?,role=? WHERE supplier_id=?";
-        PreparedStatement ps = connection.prepareStatement(sql);
+        Connection con = DatabaseConnectionManager.getConnection();
+        PreparedStatement ps = con.prepareStatement(
+                "UPDATE supplier SET supplier_name=?, email=? WHERE supplier_id=?");
+
         ps.setString(1, supplier.getSupplierName());
         ps.setString(2, supplier.getEmail());
-        ps.setString(3, supplier.getUsername());
-        ps.setString(4, supplier.getPassword());
-        ps.setString(5, supplier.getPhone());
-        ps.setString(6, supplier.getAddress());
-        ps.setString(7, supplier.getRole());
-        ps.setInt(8, supplier.getSupplierId());
+        ps.setInt(3, supplier.getSupplierId());
         ps.executeUpdate();
     }
 
-    @Override
     public void deleteSupplier(int supplierId) throws SQLException {
-        String sql = "DELETE FROM supplier WHERE supplier_id=?";
-        PreparedStatement ps = connection.prepareStatement(sql);
+        Connection con = DatabaseConnectionManager.getConnection();
+        PreparedStatement ps = con.prepareStatement("DELETE FROM supplier WHERE supplier_id=?");
         ps.setInt(1, supplierId);
         ps.executeUpdate();
     }
 
-    @Override
     public List<Supplier> getAllSuppliers() throws SQLException {
-        List<Supplier> slist = new ArrayList<>();
-        String sql = "SELECT * FROM supplier";
-        PreparedStatement ps = connection.prepareStatement(sql);
+        List<Supplier> list = new ArrayList<>();
+        Connection con = DatabaseConnectionManager.getConnection();
+        PreparedStatement ps = con.prepareStatement("SELECT * FROM supplier");
         ResultSet rs = ps.executeQuery();
+
         while (rs.next()) {
-            int supplier_id = rs.getInt("supplier_id");
-            String supplier_name = rs.getString("supplier_name");
-            String email = rs.getString("email");
-            String username = rs.getString("username");
-            String password = rs.getString("password");
-            String phone = rs.getString("phone");
-            String address = rs.getString("address");
-            String role = rs.getString("role");
-            Supplier supplier = new Supplier(supplier_id, supplier_name, email, phone, address, username, password, role);
-            slist.add(supplier);
-            return slist;
-            
+            Supplier s = new Supplier();
+            s.setSupplierId(rs.getInt("supplier_id"));
+            s.setSupplierName(rs.getString("supplier_name"));
+            s.setEmail(rs.getString("email"));
+            s.setUsername(rs.getString("username"));
+            s.setPassword(rs.getString("password"));
+            list.add(s);
         }
-        return null;
+        return list;
     }
 }
